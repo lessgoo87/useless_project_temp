@@ -1,86 +1,60 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <title>Braincell Counter Timer</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Braincell Counter</title>
+    <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-
-  <!-- Welcome / aesthetic screen -->
-  <div class="welcome-screen" id="welcomeScreen">
-    <img src="{{ url_for('static', filename='images/welcome-bg.jpg') }}" alt="bg" class="bg-image">
-    <div class="welcome-overlay">
-      <h1>🧠 Braincell Counter</h1>
-      <p class="sub">Track your focus. Lose your dignity.</p>
-      <button id="enterBtn" class="main-btn">Enter (one braincell will be sacrificed)</button>
-    </div>
-  </div>
-
-  <!-- Main app -->
-  <div class="app" id="app" style="display:none;">
-    <header>
-      <h2>Braincell Timer</h2>
-      <div class="braincell-box">
-        <span id="braincellCount">—</span>
-        <small>braincells</small>
-      </div>
-    </header>
-
-    <section class="controls">
-      <label>Timer (minutes):
-        <input id="timerMinutes" type="number" min="1" value="25">
-      </label>
-      <label>Decay interval (seconds):
-        <input id="decaySeconds" type="number" min="10" value="60">
-      </label>
-      <div class="buttons">
-        <button id="startBtn" class="main-btn">Start Timer</button>
-        <button id="pauseBtn" class="alt-btn" disabled>Pause</button>
-        <button id="resetBtn" class="alt-btn">Reset Braincells</button>
-      </div>
-    </section>
-
-    <section class="timer">
-      <div id="timerDisplay">25:00</div>
-      <div id="quote" class="quote">Delusional motivation: <span id="quoteText">Knowledge is power. You’re running on fumes.</span></div>
-    </section>
-
-    <section class="extras">
-      <button id="sacrificeBtn" class="danger-btn">Sacrifice More</button>
-      <button id="leaderboardBtn" class="alt-btn">IQ Leaderboard (rats)</button>
-    </section>
-
-    <!-- Ad modal -->
-    <div id="adModal" class="modal" aria-hidden="true">
-      <div class="modal-content">
-        <h3>Get the Premium Brick</h3>
-        <p>Buy a digital brick to bang your head and maybe recover 0.001 braincells. ₹199</p>
-        <div class="modal-actions">
-          <button id="buyBrick" class="main-btn">Buy Brick (Fake)</button>
-          <button id="closeAd" class="alt-btn">Close</button>
-        </div>
-      </div>
+    <div class="container">
+        <h1>🧠 Braincell Counter</h1>
+        <p id="count">Loading...</p>
+        <p id="quote">Fetching wisdom...</p>
     </div>
 
-    <!-- Leaderboard modal -->
-    <div id="leaderModal" class="modal" aria-hidden="true">
-      <div class="modal-content">
-        <h3>IQ Leaderboard</h3>
-        <ul id="leaderList"></ul>
-        <div class="modal-actions">
-          <button id="closeLeader" class="alt-btn">Close</button>
-        </div>
-      </div>
-    </div>
+    <script>
+        let braincellCount = 50;
 
-  </div>
+        // Function to fetch braincell count from backend
+        async function fetchCount() {
+            const res = await fetch("/get_braincells");
+            const data = await res.json();
+            braincellCount = data.count;
+            updateUI();
+        }
 
-  <audio id="violin" src="{{ url_for('static', filename='sounds/sad-violin.mp3') }}" preload="auto"></audio>
-  <audio id="pop" src="{{ url_for('static', filename='sounds/pop.mp3') }}" preload="auto"></audio>
-  <audio id="whisper" src="{{ url_for('static', filename='sounds/whisper.mp3') }}" preload="auto"></audio>
+        // Function to decrement braincell count every 10s
+        async function decrementCount() {
+            const res = await fetch("/decrement_braincells");
+            const data = await res.json();
+            braincellCount = data.count;
+            updateUI();
+        }
 
-  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+        // Update UI based on count
+        function updateUI() {
+            document.getElementById("count").textContent = `Braincells left: ${braincellCount}`;
+
+            let quote = "";
+            if (braincellCount > 5) {
+                quote = "Knowledge is power. You’re running on fumes.";
+            } else if (braincellCount >= 3) {
+                quote = "You clicked that like it was a good idea.";
+            } else if (braincellCount >= 1) {
+                quote = "A tiny braincell just floated away...";
+            } else {
+                quote = "Congratulations. You’ve reached the intellectual level of a cheese stick.";
+                document.body.classList.add("chaos");
+            }
+            document.getElementById("quote").textContent = quote;
+        }
+
+        // Initial fetch
+        fetchCount();
+
+        // Decrement every 10 seconds
+        setInterval(decrementCount, 10000);
+    </script>
 </body>
 </html>
