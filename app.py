@@ -4,43 +4,56 @@ import os
 
 app = Flask(__name__)
 
+BRAIN_FILE = "braincells.json"
 LEADERBOARD_FILE = "leaderboard.json"
 
-# Load leaderboard from file
-def load_leaderboard():
-    if os.path.exists(LEADERBOARD_FILE):
-        with open(LEADERBOARD_FILE, "r") as f:
-            return json.load(f)
-    return []
+# Initialize braincell count if not exists
+if not os.path.exists(BRAIN_FILE):
+    with open(BRAIN_FILE, "w") as f:
+        json.dump({"braincells": 50}, f)
 
-# Save leaderboard to file
+# Initialize leaderboard if not exists
+if not os.path.exists(LEADERBOARD_FILE):
+    with open(LEADERBOARD_FILE, "w") as f:
+        json.dump([], f)
+
+def load_braincells():
+    with open(BRAIN_FILE, "r") as f:
+        return json.load(f)["braincells"]
+
+def save_braincells(count):
+    with open(BRAIN_FILE, "w") as f:
+        json.dump({"braincells": count}, f)
+
+def load_leaderboard():
+    with open(LEADERBOARD_FILE, "r") as f:
+        return json.load(f)
+
 def save_leaderboard(data):
     with open(LEADERBOARD_FILE, "w") as f:
         json.dump(data, f)
 
 @app.route("/")
 def index():
-    return render_template("index.html")
+    return render_template("index.html", braincells=load_braincells(), leaderboard=load_leaderboard())
 
-@app.route("/leaderboard")
-def leaderboard():
-    data = load_leaderboard()
-    return render_template("leaderboard.html", leaderboard=data)
+@app.route("/use_braincell", methods=["POST"])
+def use_braincell():
+    count = load_braincells()
+    if count > 0:
+        count -= 1
+        save_braincells(count)
+    return jsonify({"braincells": count})
 
-@app.route("/submit_score", methods=["POST"])
-def submit_score():
-    name = request.json.get("name")
-    score = request.json.get("score")
-    global_lb = request.json.get("global")
-
-    if global_lb:
-        leaderboard_data = load_leaderboard()
-        leaderboard_data.append({"name": name, "score": score})
-        leaderboard_data = sorted(leaderboard_data, key=lambda x: x["score"], reverse=True)[:10]
-        save_leaderboard(leaderboard_data)
-        return jsonify({"status": "saved", "leaderboard": leaderboard_data})
-    else:
-        return jsonify({"status": "private"})
+@app.route("/add_score", methods=["POST"])
+def add_score():
+    name = request.form.get("name", "Anonymous").strip()
+    score = load_braincells()
+    leaderboard = load_leaderboard()
+    leaderboard.append({"name": name, "score": score})
+    leaderboard.sort(key=lambda x: x["score"], reverse=True)
+    save_leaderboard(leaderboard)
+    return jsonify({"leaderboard": leaderboard})
 
 if __name__ == "__main__":
     app.run(debug=True)

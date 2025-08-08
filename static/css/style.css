@@ -1,63 +1,54 @@
 body {
-    font-family: 'Comic Sans MS', cursive, sans-serif;
-    background: linear-gradient(120deg, #ff758c, #ff7eb3, #8affc1, #72f, #ffb347);
-    background-size: 500% 500%;
-    animation: bgAnimation 10s infinite alternate;
+    font-family: 'Comic Sans MS', cursive;
+    background: linear-gradient(135deg, #ff8a00, #e52e71);
     color: white;
     text-align: center;
     padding: 20px;
 }
 
-@keyframes bgAnimation {
-    0% { background-position: 0% 50%; }
-    100% { background-position: 100% 50%; }
+.title {
+    font-size: 2.5rem;
+    animation: glow 2s infinite alternate;
 }
 
-h1 {
-    font-size: 3rem;
-    text-shadow: 2px 2px 5px black;
+@keyframes glow {
+    from { text-shadow: 0 0 10px yellow; }
+    to { text-shadow: 0 0 20px cyan; }
 }
 
 button {
-    padding: 15px 30px;
-    font-size: 1.5rem;
+    padding: 10px 20px;
+    margin: 15px;
     border: none;
-    border-radius: 12px;
-    background: linear-gradient(45deg, #ff5f6d, #ffc371);
+    background-color: #ff4081;
     color: white;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    border-radius: 10px;
     cursor: pointer;
-    transition: transform 0.2s ease, background 0.3s ease;
+    font-size: 1.2rem;
+    transition: transform 0.2s;
 }
 
 button:hover {
-    transform: scale(1.1) rotate(3deg);
-    background: linear-gradient(45deg, #42e695, #3bb2b8);
+    transform: scale(1.1);
+    background-color: #ff79b0;
 }
 
-#braincellDisplay {
-    font-size: 2rem;
-    margin: 20px;
+.leaderboard {
+    background: rgba(0,0,0,0.3);
+    padding: 15px;
+    border-radius: 10px;
+    display: inline-block;
+    margin-top: 20px;
 }
 
-.shake {
-    animation: shakeAnim 0.3s infinite;
+input {
+    padding: 8px;
+    margin: 5px;
+    border-radius: 5px;
+    border: none;
 }
 
-@keyframes shakeAnim {
-    0% { transform: translateX(0px); }
-    25% { transform: translateX(-5px); }
-    50% { transform: translateX(5px); }
-    75% { transform: translateX(-5px); }
-    100% { transform: translateX(0px); }
-}
-
-.brain-fly {
-    animation: brainFly 3s forwards;
-    position: absolute;
-}
-
-@keyframes brainFly {
-    0% { transform: translateY(0px) scale(1); opacity: 1; }
-    100% { transform: translateY(-200px) scale(0.5); opacity: 0; }
+ul {
+    list-style: none;
+    padding: 0;
 }
