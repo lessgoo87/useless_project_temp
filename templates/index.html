@@ -1,56 +1,17 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
     <title>Braincell Countdown</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <div class="app-container">
+    <div class="container">
         <h1 class="title">🧠 Braincell Countdown</h1>
-        <p class="braincount">Remaining Braincells: <span id="braincellCount">{{ braincells }}</span></p>
-        <button id="useBraincellBtn">Use a Braincell</button>
-
-        <div class="leaderboard">
-            <h2>🏆 Private Leaderboard</h2>
-            <form id="nameForm">
-                <input type="text" name="name" placeholder="Enter your name">
-                <button type="submit">Save Score</button>
-            </form>
-            <ul id="leaderboardList">
-                {% for entry in leaderboard %}
-                <li>{{ entry.name }} — {{ entry.score }}</li>
-                {% endfor %}
-            </ul>
-        </div>
+        <p class="count">Braincells left: <span id="braincells">{{ braincells }}</span></p>
+        <button id="remove-btn">Sacrifice Braincell</button>
+        <p id="quote"></p>
     </div>
 
-    <script>
-        document.getElementById("useBraincellBtn").addEventListener("click", function () {
-            fetch("/use_braincell", { method: "POST" })
-                .then(res => res.json())
-                .then(data => {
-                    document.getElementById("braincellCount").textContent = data.braincells;
-                });
-        });
-
-        document.getElementById("nameForm").addEventListener("submit", function (e) {
-            e.preventDefault();
-            fetch("/add_score", {
-                method: "POST",
-                body: new FormData(this)
-            })
-                .then(res => res.json())
-                .then(data => {
-                    const list = document.getElementById("leaderboardList");
-                    list.innerHTML = "";
-                    data.leaderboard.forEach(entry => {
-                        const li = document.createElement("li");
-                        li.textContent = `${entry.name} — ${entry.score}`;
-                        list.appendChild(li);
-                    });
-                });
-        });
-    </script>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>

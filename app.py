@@ -1,59 +1,55 @@
-from flask import Flask, render_template, request, jsonify
-import json
-import os
+from flask import Flask, render_template, request, jsonify, session
+import random
 
 app = Flask(__name__)
+app.secret_key = "supersecretkey"
 
-BRAIN_FILE = "braincells.json"
-LEADERBOARD_FILE = "leaderboard.json"
+# Motivational + Snarky Quotes
+quotes = {
+    "high": [
+        "Knowledge is power. You’re running on fumes.",
+        "You’re still holding on to a few neurons… for now.",
+        "Think fast… oh wait, too late."
+    ],
+    "medium": [
+        "You clicked that like it was a good idea.",
+        "Ah yes… another braincell bites the dust.",
+        "You’re playing Jenga with your own intelligence."
+    ],
+    "low": [
+        "🎻 *Sad violin noises*",
+        "A braincell just grew wings and flew away.",
+        "Almost there… the void awaits."
+    ],
+    "zero": [
+        "Congratulations. You’ve reached the intellectual level of a cheese stick.",
+        "🧠💀 Your brain has left the chat.",
+        "Screen is now upside down because so are your life choices."
+    ]
+}
 
-# Initialize braincell count if not exists
-if not os.path.exists(BRAIN_FILE):
-    with open(BRAIN_FILE, "w") as f:
-        json.dump({"braincells": 50}, f)
-
-# Initialize leaderboard if not exists
-if not os.path.exists(LEADERBOARD_FILE):
-    with open(LEADERBOARD_FILE, "w") as f:
-        json.dump([], f)
-
-def load_braincells():
-    with open(BRAIN_FILE, "r") as f:
-        return json.load(f)["braincells"]
-
-def save_braincells(count):
-    with open(BRAIN_FILE, "w") as f:
-        json.dump({"braincells": count}, f)
-
-def load_leaderboard():
-    with open(LEADERBOARD_FILE, "r") as f:
-        return json.load(f)
-
-def save_leaderboard(data):
-    with open(LEADERBOARD_FILE, "w") as f:
-        json.dump(data, f)
-
-@app.route("/")
+@app.route('/')
 def index():
-    return render_template("index.html", braincells=load_braincells(), leaderboard=load_leaderboard())
+    if "braincells" not in session:
+        session["braincells"] = 50  # default starting braincells
+    return render_template('index.html', braincells=session["braincells"])
 
-@app.route("/use_braincell", methods=["POST"])
-def use_braincell():
-    count = load_braincells()
-    if count > 0:
-        count -= 1
-        save_braincells(count)
-    return jsonify({"braincells": count})
+@app.route('/remove_braincell', methods=['POST'])
+def remove_braincell():
+    braincells = session.get("braincells", 50)
+    braincells = max(0, braincells - 1)
+    session["braincells"] = braincells
 
-@app.route("/add_score", methods=["POST"])
-def add_score():
-    name = request.form.get("name", "Anonymous").strip()
-    score = load_braincells()
-    leaderboard = load_leaderboard()
-    leaderboard.append({"name": name, "score": score})
-    leaderboard.sort(key=lambda x: x["score"], reverse=True)
-    save_leaderboard(leaderboard)
-    return jsonify({"leaderboard": leaderboard})
+    if braincells > 5:
+        message = random.choice(quotes["high"])
+    elif 3 <= braincells <= 5:
+        message = random.choice(quotes["medium"])
+    elif 1 <= braincells <= 2:
+        message = random.choice(quotes["low"])
+    else:
+        message = random.choice(quotes["zero"])
+
+    return jsonify({"braincells": braincells, "message": message})
 
 if __name__ == "__main__":
     app.run(debug=True)
