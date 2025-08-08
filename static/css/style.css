@@ -1,27 +1,63 @@
 body {
-    font-family: Arial, sans-serif;
+    font-family: 'Comic Sans MS', cursive, sans-serif;
+    background: linear-gradient(120deg, #ff758c, #ff7eb3, #8affc1, #72f, #ffb347);
+    background-size: 500% 500%;
+    animation: bgAnimation 10s infinite alternate;
+    color: white;
     text-align: center;
-    background: url('/static/background.jpg') no-repeat center center fixed;
-    background-size: cover;
+    padding: 20px;
+}
+
+@keyframes bgAnimation {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 100% 50%; }
+}
+
+h1 {
+    font-size: 3rem;
+    text-shadow: 2px 2px 5px black;
+}
+
+button {
+    padding: 15px 30px;
+    font-size: 1.5rem;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(45deg, #ff5f6d, #ffc371);
     color: white;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    cursor: pointer;
+    transition: transform 0.2s ease, background 0.3s ease;
 }
 
-.centered {
-    margin-top: 20%;
+button:hover {
+    transform: scale(1.1) rotate(3deg);
+    background: linear-gradient(45deg, #42e695, #3bb2b8);
 }
 
-.hidden {
-    display: none;
+#braincellDisplay {
+    font-size: 2rem;
+    margin: 20px;
 }
 
-table {
-    margin: auto;
-    border-collapse: collapse;
-    background: rgba(0, 0, 0, 0.6);
+.shake {
+    animation: shakeAnim 0.3s infinite;
 }
 
-th, td {
-    padding: 10px;
-    border: 1px solid white;
-    color: white;
+@keyframes shakeAnim {
+    0% { transform: translateX(0px); }
+    25% { transform: translateX(-5px); }
+    50% { transform: translateX(5px); }
+    75% { transform: translateX(-5px); }
+    100% { transform: translateX(0px); }
+}
+
+.brain-fly {
+    animation: brainFly 3s forwards;
+    position: absolute;
+}
+
+@keyframes brainFly {
+    0% { transform: translateY(0px) scale(1); opacity: 1; }
+    100% { transform: translateY(-200px) scale(0.5); opacity: 0; }
 }
