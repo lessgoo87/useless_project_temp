@@ -1,55 +1,59 @@
-from flask import Flask, render_template, request, jsonify, session
-import random
+from flask import Flask, render_template, jsonify, request
+import json
+import os
+from pathlib import Path
 
 app = Flask(__name__)
-app.secret_key = "supersecretkey"
 
-# Motivational + Snarky Quotes
-quotes = {
-    "high": [
-        "Knowledge is power. You’re running on fumes.",
-        "You’re still holding on to a few neurons… for now.",
-        "Think fast… oh wait, too late."
-    ],
-    "medium": [
-        "You clicked that like it was a good idea.",
-        "Ah yes… another braincell bites the dust.",
-        "You’re playing Jenga with your own intelligence."
-    ],
-    "low": [
-        "🎻 *Sad violin noises*",
-        "A braincell just grew wings and flew away.",
-        "Almost there… the void awaits."
-    ],
-    "zero": [
-        "Congratulations. You’ve reached the intellectual level of a cheese stick.",
-        "🧠💀 Your brain has left the chat.",
-        "Screen is now upside down because so are your life choices."
-    ]
-}
+DATA_FILE = Path("braincells.json")
+DEFAULT_COUNT = 50
 
-@app.route('/')
+def read_data():
+    if not DATA_FILE.exists():
+        write_data({"count": DEFAULT_COUNT})
+    with open(DATA_FILE, "r") as f:
+        return json.load(f)
+
+def write_data(data):
+    with open(DATA_FILE, "w") as f:
+        json.dump(data, f)
+
+@app.route("/")
 def index():
-    if "braincells" not in session:
-        session["braincells"] = 50  # default starting braincells
-    return render_template('index.html', braincells=session["braincells"])
+    # Serve the page (frontend will request the count)
+    return render_template("index.html")
 
-@app.route('/remove_braincell', methods=['POST'])
-def remove_braincell():
-    braincells = session.get("braincells", 50)
-    braincells = max(0, braincells - 1)
-    session["braincells"] = braincells
+@app.route("/get_braincells", methods=["GET"])
+def get_braincells():
+    data = read_data()
+    return jsonify(data)
 
-    if braincells > 5:
-        message = random.choice(quotes["high"])
-    elif 3 <= braincells <= 5:
-        message = random.choice(quotes["medium"])
-    elif 1 <= braincells <= 2:
-        message = random.choice(quotes["low"])
-    else:
-        message = random.choice(quotes["zero"])
+@app.route("/update_braincells", methods=["POST"])
+def update_braincells():
+    """
+    POST body JSON: {"delta": -1}  (delta can be negative or positive)
+    If no body or invalid, defaults to -1 (lose one).
+    """
+    data = read_data()
+    delta = -1
+    try:
+        body = request.get_json(silent=True) or {}
+        delta = int(body.get("delta", -1))
+    except Exception:
+        delta = -1
 
-    return jsonify({"braincells": braincells, "message": message})
+    # apply
+    data["count"] = max(0, int(data.get("count", DEFAULT_COUNT)) + delta)
+    write_data(data)
+    return jsonify(data)
+
+@app.route("/reset", methods=["POST"])
+def reset():
+    write_data({"count": DEFAULT_COUNT})
+    return jsonify({"count": DEFAULT_COUNT})
 
 if __name__ == "__main__":
+    # ensure data file exists
+    if not DATA_FILE.exists():
+        write_data({"count": DEFAULT_COUNT})
     app.run(debug=True)
