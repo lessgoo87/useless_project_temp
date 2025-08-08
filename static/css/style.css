@@ -1,0 +1,36 @@
+body {
+    font-family: 'Comic Sans MS', sans-serif;
+    text-align: center;
+    padding: 2em;
+    background-color: #fafafa;
+}
+
+.screen {
+    max-width: 600px;
+    margin: auto;
+    padding: 2em;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+button {
+    padding: 10px 20px;
+    font-size: 16px;
+    margin-top: 20px;
+    cursor: pointer;
+    background-color: #ff4f4f;
+    color: white;
+    border: none;
+    border-radius: 5px;
+}
+
+#timer {
+    font-size: 48px;
+    margin: 20px 0;
+}
+
+.roast {
+    color: #d9534f;
+    font-style: italic;
+}

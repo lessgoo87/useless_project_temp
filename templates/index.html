@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Braincell Timer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <!-- Welcome Screen -->
+    <div id="welcomeScreen" class="screen">
+        <h1>🧠 Welcome to Braincell Timer</h1>
+        <p class="roast">{{ roast }}</p>
+        <button onclick="startApp()">Start Losing Braincells</button>
+    </div>
+
+    <!-- Timer App Screen -->
+    <div id="mainApp" class="screen" style="display: none;">
+        <h2>⏱️ Focus Timer</h2>
+        <div id="timer">25:00</div>
+        <p>🧠 Braincells Left: <span id="braincellCount">5</span></p>
+        <button onclick="startTimer()">Start Timer</button>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
