@@ -1,36 +1,52 @@
 body {
-    font-family: 'Comic Sans MS', sans-serif;
+    font-family: sans-serif;
+    background-color: #f0f0f0;
     text-align: center;
-    padding: 2em;
-    background-color: #fafafa;
+    padding-top: 50px;
 }
 
-.screen {
-    max-width: 600px;
-    margin: auto;
-    padding: 2em;
-    background: #fff;
+.hidden {
+    display: none;
+}
+
+#welcome-screen, #main-counter {
+    background-color: white;
+    padding: 40px;
     border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    display: inline-block;
+}
+
+#brain-cell-count {
+    font-size: 4em;
+    color: #e74c3c;
 }
 
 button {
-    padding: 10px 20px;
-    font-size: 16px;
-    margin-top: 20px;
+    padding: 15px 30px;
+    font-size: 1.2em;
     cursor: pointer;
-    background-color: #ff4f4f;
+    background-color: #3498db;
     color: white;
     border: none;
     border-radius: 5px;
 }
 
-#timer {
-    font-size: 48px;
-    margin: 20px 0;
+#welcome-screen input {
+    font-size: 1.2em;
+    padding: 8px;
+    width: 80px;
+    margin-bottom: 20px;
+    text-align: center;
 }
 
 .roast {
-    color: #d9534f;
     font-style: italic;
+    color: #555;
+}
+
+.tagline {
+    margin-top: 20px;
+    font-size: 0.9em;
+    color: #888;
 }

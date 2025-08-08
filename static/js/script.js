@@ -1,48 +1,50 @@
-function startApp() {
-    document.getElementById("welcomeScreen").style.display = "none";
-    document.getElementById("mainApp").style.display = "block";
-}
+document.addEventListener('DOMContentLoaded', () => {
+    const welcomeScreen = document.getElementById('welcome-screen');
+    const mainCounter = document.getElementById('main-counter');
+    const brainCellCountDisplay = document.getElementById('brain-cell-count');
+    const startButton = document.getElementById('start-button');
+    const timerInput = document.getElementById('timer-input');
 
-let timer;
-let minutes = 25;
-let seconds = 0;
-let braincellCount = 5;
+    let brainCells;
+    let timerId;
 
-function updateTimerDisplay() {
-    const timerElement = document.getElementById("timer");
-    let minStr = minutes < 10 ? "0" + minutes : minutes;
-    let secStr = seconds < 10 ? "0" + seconds : seconds;
-    timerElement.innerText = `${minStr}:${secStr}`;
-}
-
-function startTimer() {
-    timer = setInterval(() => {
-        if (seconds === 0) {
-            if (minutes === 0) {
-                clearInterval(timer);
-                alert("Congrats! Timer done. But at what cost to your braincells?");
-                return;
-            }
-            minutes--;
-            seconds = 59;
-        } else {
-            seconds--;
-        }
-
-        // Every 5 minutes (when seconds == 0), lose a braincell
-        if (seconds === 0 && minutes % 5 === 0) {
-            loseBraincell();
-        }
-
-        updateTimerDisplay();
-    }, 1000);
-}
-
-function loseBraincell() {
-    braincellCount--;
-    if (braincellCount < 0) {
-        alert("You're running on borrowed neurons now...");
-        braincellCount = 0;
+    // Function to update the display
+    function updateDisplay() {
+        // Format the number with commas for better readability
+        brainCellCountDisplay.textContent = brainCells.toLocaleString();
     }
-    document.getElementById("braincellCount").innerText = braincellCount;
-}
+
+    // Function to start the countdown
+    function startCountdown() {
+        const duration = parseInt(timerInput.value, 10);
+        
+        if (isNaN(duration) || duration <= 0) {
+            alert("Please enter a valid number of seconds.");
+            return;
+        }
+
+        brainCells = duration;
+        updateDisplay();
+        
+        welcomeScreen.classList.add('hidden');
+        mainCounter.classList.remove('hidden');
+        
+        timerId = setInterval(() => {
+            // Decrease the number of "brain cells"
+            brainCells--;
+            
+            // Update the display
+            updateDisplay();
+
+            // Stop the timer if the count reaches zero
+            if (brainCells <= 0) {
+                clearInterval(timerId);
+                brainCellCountDisplay.textContent = "0";
+                alert("All your brain cells are gone! Refresh the page to get more.");
+            }
+        }, 1000); // Update every 1000 milliseconds (1 second)
+    }
+
+    // Add a click event listener to the button
+    startButton.addEventListener('click', startCountdown);
+});

@@ -2,25 +2,26 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Braincell Timer</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brain Cell Counter</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- Welcome Screen -->
-    <div id="welcomeScreen" class="screen">
-        <h1>🧠 Welcome to Braincell Timer</h1>
-        <p class="roast">{{ roast }}</p>
-        <button onclick="startApp()">Start Losing Braincells</button>
+    <div id="welcome-screen">
+        <h1>Welcome to the Brain Cell Annihilator!</h1>
+        <p class="roast">Your brain cells are about to get a workout... or get lost. Place your bets now.</p>
+        <p class="roast">Are you ready to see how many brain cells you can lose just by existing?</p>
+        <label for="timer-input">Set your "brain cell count" (in seconds):</label>
+        <input type="number" id="timer-input" value="60" min="1">
+        <button id="start-button">Start the Countdown</button>
     </div>
 
-    <!-- Timer App Screen -->
-    <div id="mainApp" class="screen" style="display: none;">
-        <h2>⏱️ Focus Timer</h2>
-        <div id="timer">25:00</div>
-        <p>🧠 Braincells Left: <span id="braincellCount">5</span></p>
-        <button onclick="startTimer()">Start Timer</button>
+    <div id="main-counter" class="hidden">
+        <h1>Your Brain Cells are Fleeing!</h1>
+        <h2 id="brain-cell-count"></h2>
+        <p class="tagline">Warning: Continued inactivity may lead to a dramatic decrease in brain cells.</p>
     </div>
 
-    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script src="script.js"></script>
 </body>
 </html>
