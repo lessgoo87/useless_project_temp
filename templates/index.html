@@ -1,60 +1,88 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Braincell Counter</title>
-    <link rel="stylesheet" href="/static/style.css">
+  <meta charset="utf-8" />
+  <title>Braincell Timer</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-    <div class="container">
-        <h1>🧠 Braincell Counter</h1>
-        <p id="count">Loading...</p>
-        <p id="quote">Fetching wisdom...</p>
+
+  <!-- Welcome / Aesthetic Interactive Image -->
+  <div id="welcomeScreen" class="welcome-screen">
+    <img src="{{ url_for('static', filename='images/welcome-bg.jpg') }}" alt="bg" class="bg-image">
+    <div class="overlay">
+      <h1>🧠 Braincell Counter</h1>
+      <p class="subtitle">Track focus. Lose braincells. Look aesthetic.</p>
+      <button id="enterBtn" class="btn primary">Start Losing Braincells</button>
     </div>
+  </div>
 
-    <script>
-        let braincellCount = 50;
+  <!-- Main App -->
+  <div id="mainApp" class="app-screen" style="display:none;">
+    <header class="topbar">
+      <div class="left">
+        <h2>🧠 Braincell Timer</h2>
+        <p id="currentQuote" class="quote">Loading…</p>
+      </div>
+      <div class="right">
+        <div class="braincell-display">🧠 <span id="braincellCount">50</span></div>
+        <button id="leaderBtn" class="btn small">Leaderboard</button>
+      </div>
+    </header>
 
-        // Function to fetch braincell count from backend
-        async function fetchCount() {
-            const res = await fetch("/get_braincells");
-            const data = await res.json();
-            braincellCount = data.count;
-            updateUI();
-        }
+    <main class="main">
+      <section class="timer-panel">
+        <label for="minutesInput">Set Timer (minutes)</label>
+        <input id="minutesInput" type="number" min="1" value="25">
+        <div id="timerDisplay" class="timer">25:00</div>
+        <div class="timer-controls">
+          <button id="startTimerBtn" class="btn primary">Start</button>
+          <button id="pauseTimerBtn" class="btn">Pause</button>
+          <button id="resetTimerBtn" class="btn">Reset</button>
+        </div>
+      </section>
 
-        // Function to decrement braincell count every 10s
-        async function decrementCount() {
-            const res = await fetch("/decrement_braincells");
-            const data = await res.json();
-            braincellCount = data.count;
-            updateUI();
-        }
+      <section class="extras">
+        <button id="selfReflectBtn" class="btn">Self-Reflection Mode</button>
+        <button id="brickAdBtn" class="btn">Get Premium Brick</button>
+        <div id="resultArea"></div>
+      </section>
+    </main>
 
-        // Update UI based on count
-        function updateUI() {
-            document.getElementById("count").textContent = `Braincells left: ${braincellCount}`;
+    <footer class="footer">
+      <p class="small">Interactions remove braincells. Open app = -1 braincell.</p>
+    </footer>
+  </div>
 
-            let quote = "";
-            if (braincellCount > 5) {
-                quote = "Knowledge is power. You’re running on fumes.";
-            } else if (braincellCount >= 3) {
-                quote = "You clicked that like it was a good idea.";
-            } else if (braincellCount >= 1) {
-                quote = "A tiny braincell just floated away...";
-            } else {
-                quote = "Congratulations. You’ve reached the intellectual level of a cheese stick.";
-                document.body.classList.add("chaos");
-            }
-            document.getElementById("quote").textContent = quote;
-        }
+  <!-- Neuron Assistant Modal -->
+  <div id="neuronModal" class="modal" style="display:none;">
+    <div class="modal-content">
+      <h3>Neuron™</h3>
+      <p id="neuronText">Congratulations. You’ve reached the intellectual level of a cheese stick.</p>
+      <button class="btn" onclick="closeNeuron()">Close</button>
+    </div>
+  </div>
 
-        // Initial fetch
-        fetchCount();
+  <!-- Leaderboard Modal -->
+  <div id="leaderModal" class="modal" style="display:none;">
+    <div class="modal-content">
+      <h3>IQ Leaderboard (with Rats)</h3>
+      <ul id="leaderList"></ul>
+      <button class="btn" onclick="closeLeader()">Close</button>
+    </div>
+  </div>
 
-        // Decrement every 10 seconds
-        setInterval(decrementCount, 10000);
-    </script>
+  <!-- Brick Ad Modal -->
+  <div id="brickModal" class="modal" style="display:none;">
+    <div class="modal-content">
+      <h3>Premium Brick — ₹199</h3>
+      <p>Buy a digital brick to bang your head. May restore 0.001 braincells. (No refunds)</p>
+      <button class="btn primary" onclick="buyBrick()">Buy Brick</button>
+      <button class="btn" onclick="closeBrick()">No thanks</button>
+    </div>
+  </div>
+
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
 </body>
 </html>

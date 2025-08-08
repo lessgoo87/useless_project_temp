@@ -1,261 +1,264 @@
-// script.js — handles UI, timer, backend calls, and effects
-
+// script.js
 const API = {
-  getCount: () => fetch("/get_braincells").then(r => r.json()),
-  updateCount: (delta = -1) => fetch("/update_braincells", {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({ delta })
-  }).then(r => r.json()),
-  reset: () => fetch("/reset", { method: "POST" }).then(r => r.json())
+  getCount: "/api/get_count",
+  dec: "/api/decrement",
+  leaderboard: "/api/leaderboard",
+  setCount: "/api/set_count"
 };
 
-let braincells = 50;
+let braincellCount = 50;
+let interactionLock = false;
 let timerInterval = null;
-let decaySeconds = 60; // default
-let secondsLeft = 1500; // default 25*60
+let secondsLeft = 0;
+let whisperAudio = null;
+let violinAudio = null;
+let adDingAudio = null;
 
-// quotes for ranges
-const QUOTES = {
-  high: ["Knowledge is power. You’re running on fumes.", "Go on, pretend you're efficient."],
-  mid: ["You clicked that like it was a good idea.", "Your attention span just sent a resignation letter."],
-  low: ["That violin? That's your dignity leaving.", "One winged braincell just flew away."],
-  zero: ["Congratulations. You’ve reached the intellectual level of a cheese stick.", "Stupidity intensifies..."]
+// UI elements
+const welcomeScreen = document.getElementById("welcomeScreen");
+const enterBtn = document.getElementById("enterBtn");
+const mainApp = document.getElementById("mainApp");
+const braincellDisplay = () => document.getElementById("braincellCount");
+const quoteEl = document.getElementById("currentQuote");
+const timerDisplay = document.getElementById("timerDisplay");
+const minutesInput = document.getElementById("minutesInput");
+
+// preload audios (user must supply files)
+try { violinAudio = new Audio('/static/sounds/sad-violin.mp3'); violinAudio.loop = false } catch(e){}
+try { whisperAudio = new Audio('/static/sounds/whisper-loop.mp3'); whisperAudio.loop = true } catch(e){}
+try { adDingAudio = new Audio('/static/sounds/ad-ding.mp3'); } catch(e){}
+
+// quotes
+const quotes = {
+  high: ["Knowledge is power. You're running on fumes.","You're doing fine. For a potato."],
+  mid: ["You clicked that like it was a good idea.","Half-brained effort — commendable."],
+  low: ["One tiny braincell remains, handle with care.","You might be a plot twist in evolution."],
+  zero: ["Congratulations. You’ve reached the intellectual level of a cheese stick.","Neuron™ has left the chat."]
 };
 
-// DOM
-const welcomeScreen = document.getElementById("welcomeScreen");
-const appRoot = document.getElementById("app");
-const enterBtn = document.getElementById("enterBtn");
-const braincellEl = document.getElementById("braincellCount");
-const timerDisplay = document.getElementById("timerDisplay");
-const startBtn = document.getElementById("startBtn");
-const pauseBtn = document.getElementById("pauseBtn");
-const resetBtn = document.getElementById("resetBtn");
-const sacrificeBtn = document.getElementById("sacrificeBtn");
-const timerMinutesInput = document.getElementById("timerMinutes");
-const decaySecondsInput = document.getElementById("decaySeconds");
-const quoteText = document.getElementById("quoteText");
-const violinAudio = document.getElementById("violin");
-const popAudio = document.getElementById("pop");
-const whisperAudio = document.getElementById("whisper");
-const adModal = document.getElementById("adModal");
-const buyBrick = document.getElementById("buyBrick");
-const closeAd = document.getElementById("closeAd");
-const leaderModal = document.getElementById("leaderModal");
-const leaderboardBtn = document.getElementById("leaderboardBtn");
-const leaderList = document.getElementById("leaderList");
-const closeLeader = document.getElementById("closeLeader");
-
-// helper: format seconds
-function fmtSecs(s){
-  s = Math.max(0, Math.floor(s));
-  const m = Math.floor(s/60);
-  const sec = s % 60;
-  return `${String(m).padStart(2,"0")}:${String(sec).padStart(2,"0")}`;
+function setQuoteForCount(n){
+  let q = "";
+  if(n > 5) q = quotes.high[Math.floor(Math.random()*quotes.high.length)];
+  else if(n >= 3) q = quotes.mid[Math.floor(Math.random()*quotes.mid.length)];
+  else if(n >= 1) q = quotes.low[Math.floor(Math.random()*quotes.low.length)];
+  else q = quotes.zero[Math.floor(Math.random()*quotes.zero.length)];
+  if(quoteEl) quoteEl.innerText = q;
 }
 
-// update UI based on braincell count
-function updateUIState(){
-  braincellEl.textContent = braincells;
-  // choose quote
-  let qset = QUOTES.high;
-  if (braincells > 5) qset = QUOTES.high;
-  else if (braincells >= 3) qset = QUOTES.mid;
-  else if (braincells >= 1) qset = QUOTES.low;
-  else qset = QUOTES.zero;
-
-  quoteText.textContent = qset[Math.floor(Math.random()*qset.length)];
-
-  // visual effects
-  const app = document.querySelector(".app");
-  if (!app) return;
-  // >5 normal
-  if (braincells > 5) {
-    app.classList.remove("shake","grayscale");
-    // mild motivational — no sound
-  } else if (braincells >= 3) {
-    // shake
-    app.classList.add("shake");
-    setTimeout(()=> app.classList.remove("shake"), 400);
-  } else if (braincells >= 1) {
-    // sad violin + floating braincell animation
-    violinAudio.currentTime = 0; violinAudio.play().catch(()=>{});
-    spawnFloatingBrain();
-    // change Sacrifice button label
-    sacrificeBtn.textContent = "Sacrifice More";
-  } else {
-    // 0: grayscale + flip + whispers + assistant message
-    app.classList.add("grayscale");
-    whisperAudio.currentTime = 0; whisperAudio.play().catch(()=>{});
-    // show assistant message
-    alert("Neuron™: Congratulations. You've reached the intellectual level of a cheese stick.");
+// fetch current count from server
+async function fetchCount(){
+  try {
+    const res = await fetch(API.getCount);
+    const j = await res.json();
+    braincellCount = j.count;
+    if(braincellDisplay()) braincellDisplay().innerText = braincellCount;
+    setQuoteForCount(braincellCount);
+    applyVisuals();
+  } catch(e){
+    console.error("fetchCount", e);
   }
 }
 
-// spawn floating brain animation element
-function spawnFloatingBrain(){
-  const el = document.createElement("div");
-  el.className = "float";
-  el.textContent = "🧠";
-  el.style.position = "fixed";
-  // spawn near braincell count
-  const rect = braincellEl.getBoundingClientRect();
-  el.style.left = (rect.left + rect.width/2) + "px";
-  el.style.top = (rect.top) + "px";
-  el.style.fontSize = "28px";
-  el.style.zIndex = 50;
-  document.body.appendChild(el);
-  // remove after animation
-  setTimeout(()=> el.remove(), 2600);
+// decrement via server
+async function decrementLocal(){
+  try {
+    const res = await fetch(API.dec, {method:'POST'});
+    const j = await res.json();
+    braincellCount = j.count;
+    if(braincellDisplay()) braincellDisplay().innerText = braincellCount;
+    setQuoteForCount(braincellCount);
+    applyVisuals();
+    maybeNotification();
+  } catch(e){ console.error("decrement", e) }
 }
 
-// fetch current count then decrement once for "open"
-async function initCountAndDecayOnOpen(){
-  try{
-    const data = await API.getCount();
-    braincells = Number(data.count || 0);
-    updateUIState();
-    // decrement once for opening the app / visit
-    const res = await API.updateCount(-1);
-    braincells = Number(res.count);
-    updateUIState();
-    // update displayed
-    braincellEl.textContent = braincells;
-  }catch(err){
-    console.error("Failed to init count", err);
-  }
+// call decrement on page load once (opening the app removes 1 braincell)
+async function openDecrement(){
+  await decrementLocal();
 }
 
-// update count locally and on server
-async function changeBraincells(delta){
-  try{
-    const res = await API.updateCount(delta);
-    braincells = Number(res.count);
-    updateUIState();
-  }catch(err){
-    console.error("update failed", err);
-    // fallback local update
-    braincells = Math.max(0, braincells + delta);
-    updateUIState();
-  }
-}
+// apply visuals & behavior by braincell count
+function applyVisuals(){
+  // remove any previous special classes
+  document.body.classList.remove('zero-mode');
+  // remove shake quickly
+  const main = document.querySelector('.main') || document.querySelector('.topbar');
+  if(main) main.classList.remove('shake');
 
-// timer logic
-function startTimer(){
-  // read inputs
-  const minutes = Math.max(1, parseInt(timerMinutesInput.value) || 25);
-  decaySeconds = Math.max(5, parseInt(decaySecondsInput.value) || 60);
-  secondsLeft = minutes * 60;
-  clearInterval(timerInterval);
-  updateTimerOnce();
-  startBtn.disabled = true;
-  pauseBtn.disabled = false;
+  // stop/stop audios
+  if(whisperAudio && whisperAudio.pause) whisperAudio.pause();
 
-  timerInterval = setInterval(()=> {
-    secondsLeft--;
-    // if decay tick (every decaySeconds)
-    if (secondsLeft >= 0 && (secondsLeft % decaySeconds === 0)) {
-      // make server decrement by 1
-      changeBraincells(-1);
-      popAudio.currentTime = 0; popAudio.play().catch(()=>{});
-      notifyUser(`${braincells} braincells remaining. Ouch.`);
+  if(braincellCount > 5){
+    // normal motivational
+    setQuoteForCount(braincellCount);
+  } else if(braincellCount >= 3){
+    // shake UI a bit
+    if(main) {
+      main.classList.add('shake');
+      setTimeout(()=> main.classList.remove('shake'), 400);
     }
-    updateTimerOnce();
-    if (secondsLeft <= 0) {
+  } else if(braincellCount >= 1){
+    // sad violin & floating brain animation
+    if(violinAudio && violinAudio.play) violinAudio.play();
+    createFloatingBrain();
+  } else { // zero
+    // chaos: grayscale, flip, whispers, neuron modal
+    document.body.classList.add('zero-mode');
+    if(whisperAudio && whisperAudio.play) whisperAudio.play();
+    showNeuron();
+  }
+}
+
+// create tiny floating brain element (removed after animation)
+function createFloatingBrain(){
+  const el = document.createElement('div');
+  el.className = 'floating-brain';
+  document.body.appendChild(el);
+  setTimeout(()=> el.remove(), 2200);
+}
+
+// Neuron assistant modal
+function showNeuron(){
+  const modal = document.getElementById('neuronModal');
+  if(modal) modal.style.display = 'flex';
+}
+function closeNeuron(){
+  const modal = document.getElementById('neuronModal');
+  if(modal) modal.style.display = 'none';
+}
+
+// interaction handling (debounced so we don't kill many braincells accidentally)
+function interactionHandler(){
+  if(interactionLock) return;
+  interactionLock = true;
+  decrementLocal();
+  setTimeout(()=> interactionLock = false, 5000); // 5s cooldown
+}
+
+// timer logic (user-customizable minutes)
+function startTimer(){
+  // clear if existing
+  clearInterval(timerInterval);
+  const mins = Math.max(1, parseInt(minutesInput.value || 25));
+  secondsLeft = mins * 60;
+  updateTimerUI(secondsLeft);
+  // every second tick - every minute (when secondsLeft % 60 == 0) we'll call decrementLocal()
+  timerInterval = setInterval(() => {
+    secondsLeft--;
+    if(secondsLeft <= 0){
       clearInterval(timerInterval);
-      startBtn.disabled = false;
-      pauseBtn.disabled = true;
-      notifyUser("⏰ Timer finished. Roasting time.");
-      // optionally play final sound
-      violinAudio.currentTime = 0; violinAudio.play().catch(()=>{});
+      updateTimerUI(0);
+      // final ring & roast
+      if(adDingAudio && adDingAudio.play) adDingAudio.play();
+      alert("⏰ Time's up! You roasted your braincells a little more.");
+    } else {
+      if(secondsLeft % 60 === 0){
+        // reduce braincell per minute
+        decrementLocal();
+      }
+      updateTimerUI(secondsLeft);
     }
   }, 1000);
 }
 
-function updateTimerOnce(){
-  timerDisplay.textContent = fmtSecs(secondsLeft);
-}
-
 function pauseTimer(){
   clearInterval(timerInterval);
-  startBtn.disabled = false;
-  pauseBtn.disabled = true;
 }
 
-// small UI interactions
-enterBtn.addEventListener("click", async () => {
-  // entering the app also counts as interaction: server update happened during init already,
-  // but let's ensure one more decrement if you want (commented)
-  // await changeBraincells(-1);
-  welcomeScreen.style.display = "none";
-  appRoot.style.display = "block";
-  // request notification permission for "notifications you'll regret"
-  if ("Notification" in window && Notification.permission !== "granted") {
-    Notification.requestPermission();
-  }
-});
+function resetTimer(){
+  clearInterval(timerInterval);
+  const mins = Math.max(1, parseInt(minutesInput.value || 25));
+  secondsLeft = mins * 60;
+  updateTimerUI(secondsLeft);
+}
 
-// general "sacrifice" button
-sacrificeBtn.addEventListener("click", ()=> changeBraincells(-1));
+// update timer UI
+function updateTimerUI(s){
+  const m = Math.floor(s / 60);
+  const sec = s % 60;
+  if(timerDisplay) timerDisplay.innerText = `${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+}
 
-// start/pause/reset
-startBtn.addEventListener("click", startTimer);
-pauseBtn.addEventListener("click", pauseTimer);
-resetBtn.addEventListener("click", async ()=>{
-  if (!confirm("Reset braincells to 50?")) return;
-  const res = await API.reset();
-  braincells = Number(res.count);
-  updateUIState();
-});
-
-// ad modal
-let adTimer = setTimeout(()=> {
-  adModal.setAttribute("aria-hidden", "false");
-}, 20000); // show ad after 20s
-
-closeAd.addEventListener("click", ()=> adModal.setAttribute("aria-hidden", "true"));
-buyBrick.addEventListener("click", ()=> {
-  alert("Transaction failed: Your dignity is not accepted as payment.");
-  adModal.setAttribute("aria-hidden", "true");
-});
-
-// leaderboard (fake)
-leaderboardBtn.addEventListener("click", ()=>{
-  const rats = [
-    {name: "Lab Rat #23", iq: (Math.random()*10+0.1).toFixed(2)},
-    {name: "Rock with Moss", iq: (Math.random()*0.5+0.01).toFixed(2)},
-    {name: "Goldfish", iq: (Math.random()*2+0.5).toFixed(2)},
-    {name: "You", iq: braincells.toFixed(2)}
-  ];
-  leaderList.innerHTML = rats.map(r => `<li>${r.name} — IQ: ${r.iq}</li>`).join("");
-  leaderModal.setAttribute("aria-hidden", "false");
-});
-closeLeader.addEventListener("click", ()=> leaderModal.setAttribute("aria-hidden", "true"));
-
-// Notifications helper (works while tab open, will not show when browser/tab closed unless you implement push service worker)
-function notifyUser(text){
-  if (!("Notification" in window)) return;
-  if (Notification.permission === "granted") {
-    new Notification("Braincell Counter", { body: text, icon: "/static/images/welcome-bg.jpg" });
+// notifications
+function maybeNotification(){
+  if(!("Notification" in window)) return;
+  if(Notification.permission === "granted"){
+    // show a quick notification on low counts, or every time it hits zero
+    if(braincellCount <= 0){
+      new Notification("Braincell Counter", { body: "Congratulations. All braincells expired." });
+    } else if (Math.random() < 0.1){
+      new Notification("Braincell Counter", { body: "We regret to inform you your last braincell has expired." });
+    }
   }
 }
 
-// click anywhere => interaction decrements (configurable). Avoid over-decrement by throttling.
-let lastInteraction = 0;
-document.addEventListener("click", async (e)=>{
-  // if click is on certain buttons, we handle separately
-  if (["enterBtn","startBtn","pauseBtn","resetBtn","sacrificeBtn","buyBrick"].includes(e.target.id)) return;
-  const now = Date.now();
-  if (now - lastInteraction > 2000) { // throttle 2s
-    lastInteraction = now;
-    await changeBraincells(-1);
+// request permission for notifications
+function initNotifications(){
+  if(!("Notification" in window)) return;
+  if(Notification.permission === "default"){
+    Notification.requestPermission().then(p=>{
+      console.log("Notification permission:", p);
+    });
   }
-});
+}
 
-// init on load
-window.addEventListener("DOMContentLoaded", async ()=>{
-  await initCountAndDecayOnOpen();
-  // set initial displayed timer and decay values
-  updateTimerOnce();
+// Leaderboard functions
+async function openLeaderboard(){
+  try {
+    const res = await fetch(API.leaderboard);
+    const j = await res.json();
+    const list = document.getElementById('leaderList');
+    list.innerHTML = "";
+    j.leaderboard.forEach(e=>{
+      const li = document.createElement('li');
+      li.innerText = `${e.name} — IQ ${e.iq}`;
+      list.appendChild(li);
+    });
+    document.getElementById('leaderModal').style.display = 'flex';
+  } catch(e){ console.error(e) }
+}
+function closeLeader(){ document.getElementById('leaderModal').style.display = 'none' }
+
+// Brick Ad modal
+function openBrick(){ document.getElementById('brickModal').style.display = 'flex'}
+function closeBrick(){ document.getElementById('brickModal').style.display = 'none'}
+function buyBrick(){
+  // play ding, pretend to sell
+  if(adDingAudio && adDingAudio.play) adDingAudio.play();
+  alert("Thanks for buying the Premium Brick. It did nothing. +0.001 braincells incoming (maybe).");
+  closeBrick();
+}
+
+// Self reflection (shows a small summary)
+function selfReflect(){
+  const el = document.getElementById('resultArea');
+  el.innerText = `You've got ${braincellCount} braincells remaining. Consider meditation or a snack.`;
+}
+
+// init wiring
+window.addEventListener('load', async ()=>{
+  // fetch initial count
+  await fetchCount();
+  // open-decrement (opening app removes 1)
+  await openDecrement();
+  // wire up enter button
+  enterBtn?.addEventListener('click', ()=>{
+    welcomeScreen.style.display = 'none';
+    mainApp.style.display = 'block';
+    initNotifications();
+  });
+
+  // wire timer controls
+  document.getElementById('startTimerBtn')?.addEventListener('click', startTimer);
+  document.getElementById('pauseTimerBtn')?.addEventListener('click', pauseTimer);
+  document.getElementById('resetTimerBtn')?.addEventListener('click', resetTimer);
+
+  document.getElementById('leaderBtn')?.addEventListener('click', openLeaderboard);
+  document.getElementById('selfReflectBtn')?.addEventListener('click', selfReflect);
+  document.getElementById('brickAdBtn')?.addEventListener('click', openBrick);
+
+  // global interaction handlers (clicks, keys) -> decrement with cooldown
+  ['click','keydown','touchstart'].forEach(evt=>{
+    window.addEventListener(evt, interactionHandler, {passive:true});
+  });
 });
