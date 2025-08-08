@@ -15,6 +15,8 @@ body {
     border-radius: 10px;
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     display: inline-block;
+    width: 80%;
+    max-width: 600px;
 }
 
 #brain-cell-count {
@@ -22,7 +24,7 @@ body {
     color: #e74c3c;
 }
 
-button {
+#start-button {
     padding: 15px 30px;
     font-size: 1.2em;
     cursor: pointer;
@@ -30,13 +32,14 @@ button {
     color: white;
     border: none;
     border-radius: 5px;
+    margin-top: 20px;
 }
 
-#welcome-screen input {
+#timer-input {
     font-size: 1.2em;
     padding: 8px;
     width: 80px;
-    margin-bottom: 20px;
+    margin-top: 20px;
     text-align: center;
 }
 
@@ -49,4 +52,13 @@ button {
     margin-top: 20px;
     font-size: 0.9em;
     color: #888;
+}
+
+#ai-canvas {
+    display: block;
+    width: 100%;
+    height: 200px;
+    margin: 20px auto;
+    background-color: #f9f9f9;
+    border: 1px solid #ccc;
 }
