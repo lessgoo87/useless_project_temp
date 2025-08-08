@@ -1,28 +1,27 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
     <title>Braincell Counter</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <div id="welcome-screen" class="centered">
-        <h1>🧠 Welcome to the Braincell Counter</h1>
-        <input type="text" id="username" placeholder="Enter your name">
-        <div>
-            <label><input type="radio" name="mode" value="private" checked> Private Leaderboard</label>
-            <label><input type="radio" name="mode" value="global"> Global Leaderboard</label>
-        </div>
-        <button onclick="startGame()">Start Losing Braincells</button>
-    </div>
+    <h1>🧠 Braincell Counter</h1>
 
-    <div id="game-screen" class="hidden">
-        <h1>Your Braincells: <span id="braincells">50</span></h1>
-        <button onclick="loseBraincell()">Click to Lose 1</button>
-        <br>
-        <a href="/leaderboard">View Leaderboard</a>
-    </div>
+    <div id="braincellDisplay">Remaining Braincells: {{ braincells }}</div>
 
-    <script src="/static/script.js"></script>
+    <button onclick="removeBraincell()">Lose a Braincell</button>
+    <br><br>
+
+    <input type="text" id="username" placeholder="Enter your name">
+    <button onclick="addToLeaderboard()">Add to Leaderboard</button>
+
+    <h2>🏆 Leaderboard</h2>
+    <ul id="leaderboard">
+        {% for name, score in leaderboard %}
+            <li>{{ name }} - {{ score }}</li>
+        {% endfor %}
+    </ul>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>

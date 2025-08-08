@@ -1,37 +1,33 @@
-let braincells = 50;
-let username = "";
-let isGlobal = false;
+function removeBraincell() {
+    fetch('/remove', { method: 'POST' })
+    .then(response => response.json())
+    .then(data => {
+        document.getElementById('braincellDisplay').innerText =
+            `Remaining Braincells: ${data.braincells}`;
 
-function startGame() {
-    username = document.getElementById("username").value.trim();
-    if (!username) {
-        alert("Enter your name!");
-        return;
-    }
-    isGlobal = document.querySelector('input[name="mode"]:checked').value === "global";
-
-    document.getElementById("welcome-screen").classList.add("hidden");
-    document.getElementById("game-screen").classList.remove("hidden");
-    document.getElementById("braincells").innerText = braincells;
-}
-
-function loseBraincell() {
-    if (braincells > 0) {
-        braincells--;
-        document.getElementById("braincells").innerText = braincells;
-    }
-    if (braincells === 0) {
-        saveScore();
-        alert("You’ve reached the intellectual level of a cheese stick 🧀");
-    }
-}
-
-function saveScore() {
-    fetch("/submit_score", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({name: username, score: braincells, global: isGlobal})
-    }).then(res => res.json()).then(data => {
-        console.log(data);
+        if (data.braincells <= 5 && data.braincells > 3) {
+            document.body.classList.add("shake");
+        } else if (data.braincells <= 3 && data.braincells > 1) {
+            let brain = document.createElement("div");
+            brain.innerText = "🧠";
+            brain.classList.add("brain-fly");
+            brain.style.left = `${Math.random() * window.innerWidth}px`;
+            document.body.appendChild(brain);
+            setTimeout(() => brain.remove(), 3000);
+        } else if (data.braincells <= 0) {
+            document.body.style.transform = "rotate(180deg)";
+            document.body.style.filter = "grayscale(100%)";
+            alert("🧀 Congratulations. You’ve reached the intellectual level of a cheese stick.");
+        }
     });
+}
+
+function addToLeaderboard() {
+    let username = document.getElementById("username").value;
+    fetch('/leaderboard', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: username })
+    })
+    .then(() => location.reload());
 }
