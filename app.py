@@ -1,59 +1,46 @@
-from flask import Flask, render_template, jsonify, request
+from flask import Flask, render_template, request, jsonify
 import json
 import os
-from pathlib import Path
 
 app = Flask(__name__)
 
-DATA_FILE = Path("braincells.json")
-DEFAULT_COUNT = 50
+LEADERBOARD_FILE = "leaderboard.json"
 
-def read_data():
-    if not DATA_FILE.exists():
-        write_data({"count": DEFAULT_COUNT})
-    with open(DATA_FILE, "r") as f:
-        return json.load(f)
+# Load leaderboard from file
+def load_leaderboard():
+    if os.path.exists(LEADERBOARD_FILE):
+        with open(LEADERBOARD_FILE, "r") as f:
+            return json.load(f)
+    return []
 
-def write_data(data):
-    with open(DATA_FILE, "w") as f:
+# Save leaderboard to file
+def save_leaderboard(data):
+    with open(LEADERBOARD_FILE, "w") as f:
         json.dump(data, f)
 
 @app.route("/")
 def index():
-    # Serve the page (frontend will request the count)
     return render_template("index.html")
 
-@app.route("/get_braincells", methods=["GET"])
-def get_braincells():
-    data = read_data()
-    return jsonify(data)
+@app.route("/leaderboard")
+def leaderboard():
+    data = load_leaderboard()
+    return render_template("leaderboard.html", leaderboard=data)
 
-@app.route("/update_braincells", methods=["POST"])
-def update_braincells():
-    """
-    POST body JSON: {"delta": -1}  (delta can be negative or positive)
-    If no body or invalid, defaults to -1 (lose one).
-    """
-    data = read_data()
-    delta = -1
-    try:
-        body = request.get_json(silent=True) or {}
-        delta = int(body.get("delta", -1))
-    except Exception:
-        delta = -1
+@app.route("/submit_score", methods=["POST"])
+def submit_score():
+    name = request.json.get("name")
+    score = request.json.get("score")
+    global_lb = request.json.get("global")
 
-    # apply
-    data["count"] = max(0, int(data.get("count", DEFAULT_COUNT)) + delta)
-    write_data(data)
-    return jsonify(data)
-
-@app.route("/reset", methods=["POST"])
-def reset():
-    write_data({"count": DEFAULT_COUNT})
-    return jsonify({"count": DEFAULT_COUNT})
+    if global_lb:
+        leaderboard_data = load_leaderboard()
+        leaderboard_data.append({"name": name, "score": score})
+        leaderboard_data = sorted(leaderboard_data, key=lambda x: x["score"], reverse=True)[:10]
+        save_leaderboard(leaderboard_data)
+        return jsonify({"status": "saved", "leaderboard": leaderboard_data})
+    else:
+        return jsonify({"status": "private"})
 
 if __name__ == "__main__":
-    # ensure data file exists
-    if not DATA_FILE.exists():
-        write_data({"count": DEFAULT_COUNT})
     app.run(debug=True)
