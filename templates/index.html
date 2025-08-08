@@ -62,6 +62,10 @@
             if (braincells > 0) {
                 braincells--;
                 document.getElementById('braincell-count').textContent = braincells;
+                if (braincells === 0) {
+                    // Redirect to second page
+                    window.location.href = "gameover.html";
+                }
             }
         }
     </script>
