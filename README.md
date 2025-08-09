@@ -80,25 +80,26 @@ Push Notifications with regret messages
 
 # Screenshots (Add at least 3)
 # screenshots are from how it is run in v0 with all the same features.
-![Screenshot1]
--This image shows the v0 version of what the product would look like. It starts with the timer that shows the different modes- currently in productivity mode.
+!<img width="944" height="615" alt="Screenshot 2025-08-09 052141" src="https://github.com/user-attachments/assets/8b3f9c25-75b8-48a7-baaa-9aa390622df8" />
+-This image shows the v0 version of what the product would look like. It starts wit!
+h the timer that shows the different modes- currently in productivity mode.
 
-![Screenshot2]
+!<img width="999" height="475" alt="Screenshot 2025-08-09 053250" src="https://github.com/user-attachments/assets/221c57c5-b974-4231-b82d-d11214b1a47f" />
 -This shows the popup roast feature at regular intervals.
 
-![Screenshot3]
+<img width="718" height="515" alt="Screenshot 2025-08-09 053430" src="https://github.com/user-attachments/assets/46b81105-43b6-4d2a-82c4-db59b0fd0690" />
 -Once all the braincells are lost the entire screen flips and goes upside down whereas a singular message is upright giving a final roast.
 
 # screenshots after running using vscode
-![Screenshot1]
+<img width="1314" height="505" alt="Screenshot 2025-08-09 055822" src="https://github.com/user-attachments/assets/99e56918-03a9-4bab-bebc-fcfc2afe784c" />
 -This is the first interface after lauching the code
 
 
-![Screenshot2]
+<img width="1357" height="526" alt="Screenshot 2025-08-09 055851" src="https://github.com/user-attachments/assets/daf6e752-7a41-4cba-9047-3ff5e089ba0b" />
 - A customisable timer with options to self-reflect or buy a brick (yes that's a thing)
 
 
-![Screenshot1]
+<img width="1342" height="460" alt="Screenshot 2025-08-09 055916" src="https://github.com/user-attachments/assets/203f6af6-b5a4-4d09-a1ba-405a00fef785" />
 -What happens when you want to check out the brick
 
 
